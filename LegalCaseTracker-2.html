@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LexTrack — Legal Case Management</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --ink:       #1a1f2e;
+    --ink-soft:  #4a5568;
+    --ink-faint: #8896a8;
+    --parchment: #f7f5f0;
+    --cream:     #fdfcf9;
+    --gold:      #b5872a;
+    --gold-light:#f0e6c8;
+    --gold-pale: #faf6ed;
+    --red:       #c0392b;
+    --red-pale:  #fdf2f1;
+    --green:     #1a6b4a;
+    --green-pale:#edf7f2;
+    --blue:      #1b4f8c;
+    --blue-pale: #eef3fb;
+    --border:    #e2ddd4;
+    --shadow:    rgba(26,31,46,0.08);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--parchment);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ── SIDEBAR ── */
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 260px; min-width: 260px;
+    background: var(--ink);
+    display: flex; flex-direction: column;
+    position: sticky; top: 0; height: 100vh;
+  }
+
+  .sidebar-logo {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sidebar-logo h1 {
+    font-family: 'EB Garamond', serif;
+    font-size: 26px; color: #fff; font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .sidebar-logo h1 span { color: var(--gold); }
+  .sidebar-logo p { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 3px; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  .sidebar-nav { padding: 16px 12px; flex: 1; }
+  .nav-label { font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 12px 6px; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 8px;
+    color: rgba(255,255,255,0.6); font-size: 13.5px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s; margin-bottom: 2px;
+    border: none; background: none; width: 100%; text-align: left;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+  .nav-item.active { background: var(--gold); color: #fff; }
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+
+  .sidebar-footer {
+    padding: 16px 24px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    font-size: 11.5px; color: rgba(255,255,255,0.3);
+  }
+
+  /* ── MAIN ── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  .topbar {
+    background: var(--cream);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .topbar-title { font-family: 'EB Garamond', serif; font-size: 22px; font-weight: 600; }
+  .topbar-right { display: flex; gap: 10px; align-items: center; }
+
+  .btn {
+    padding: 8px 18px; border-radius: 7px; font-size: 13px; font-weight: 500;
+    cursor: pointer; border: none; transition: all 0.15s;
+  }
+  .btn-primary { background: var(--gold); color: #fff; }
+  .btn-primary:hover { background: #a07520; }
+  .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--ink-soft); }
+  .btn-outline:hover { border-color: var(--ink-soft); color: var(--ink); }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-danger:hover { background: #a93226; }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+  .content { padding: 28px 32px; flex: 1; overflow-y: auto; }
+
+  /* ── STATS ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+
+  .stat-card {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .stat-icon {
+    width: 44px; height: 44px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+    flex-shrink: 0;
+  }
+  .stat-icon.gold { background: var(--gold-pale); }
+  .stat-icon.red  { background: var(--red-pale); }
+  .stat-icon.green{ background: var(--green-pale); }
+  .stat-icon.blue { background: var(--blue-pale); }
+  .stat-val { font-size: 28px; font-weight: 600; font-family: 'EB Garamond', serif; line-height: 1; }
+  .stat-label { font-size: 12px; color: var(--ink-faint); margin-top: 3px; }
+
+  /* ── SECTION HEADER ── */
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .section-head h2 { font-family: 'EB Garamond', serif; font-size: 19px; font-weight: 600; }
+
+  /* ── FILTERS ── */
+  .filters { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+  .filter-btn {
+    padding: 6px 14px; border-radius: 20px; font-size: 12.5px; font-weight: 500;
+    cursor: pointer; border: 1.5px solid var(--border); background: var(--cream);
+    color: var(--ink-soft); transition: all 0.15s;
+  }
+  .filter-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .filter-btn:hover:not(.active) { border-color: var(--ink-soft); }
+
+  .search-bar {
+    display: flex; gap: 10px; margin-bottom: 18px;
+  }
+  .search-bar input {
+    flex: 1; padding: 9px 14px; border: 1.5px solid var(--border);
+    border-radius: 8px; font-size: 13.5px; background: var(--cream);
+    font-family: 'Inter', sans-serif; color: var(--ink); outline: none;
+    transition: border-color 0.15s;
+  }
+  .search-bar input:focus { border-color: var(--gold); }
+
+  /* ── CASE TABLE ── */
+  .case-table-wrap {
+    background: var(--cream); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: var(--parchment); border-bottom: 1.5px solid var(--border); }
+  thead th {
+    padding: 12px 16px; text-align: left; font-size: 11.5px;
+    font-weight: 600; color: var(--ink-faint); text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--parchment); }
+  tbody td { padding: 13px 16px; font-size: 13.5px; vertical-align: middle; }
+
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em;
+  }
+  .badge-active  { background: var(--blue-pale);  color: var(--blue); }
+  .badge-pending { background: var(--gold-pale);  color: var(--gold); }
+  .badge-closed  { background: var(--green-pale); color: var(--green); }
+  .badge-urgent  { background: var(--red-pale);   color: var(--red); }
+
+  .case-no { font-weight: 600; color: var(--blue); font-size: 13px; }
+  .case-name { font-weight: 500; }
+  .case-client { font-size: 12.5px; color: var(--ink-faint); margin-top: 2px; }
+  .hearing-date { font-weight: 500; }
+  .hearing-soon { color: var(--red); font-weight: 600; }
+  .action-btns { display: flex; gap: 6px; }
+
+  /* ── UPCOMING PANEL ── */
+  .upcoming-list { display: flex; flex-direction: column; gap: 10px; }
+  .upcoming-item {
+    background: var(--cream); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 18px;
+    display: flex; align-items: center; gap: 14px;
+    border-left: 4px solid var(--gold);
+  }
+  .upcoming-item.urgent { border-left-color: var(--red); }
+  .upcoming-date {
+    text-align: center; min-width: 46px;
+  }
+  .upcoming-date .day { font-size: 22px; font-weight: 600; font-family: 'EB Garamond', serif; line-height: 1; }
+  .upcoming-date .month { font-size: 11px; color: var(--ink-faint); text-transform: uppercase; }
+  .upcoming-info { flex: 1; }
+  .upcoming-info .title { font-weight: 500; font-size: 14px; }
+  .upcoming-info .sub { font-size: 12px; color: var(--ink-faint); margin-top: 2px; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(26,31,46,0.5);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100; padding: 20px;
+  }
+  .modal-overlay.hidden { display: none; }
+  .modal {
+    background: var(--cream); border-radius: 16px;
+    width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(26,31,46,0.2);
+  }
+  .modal-header {
+    padding: 22px 26px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-header h3 { font-family: 'EB Garamond', serif; font-size: 20px; font-weight: 600; }
+  .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--ink-faint); padding: 4px; }
+  .modal-body { padding: 22px 26px; }
+  .modal-footer { padding: 16px 26px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+
+  .form-group { margin-bottom: 18px; }
+  .form-group label { display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-soft); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 10px 13px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: 13.5px; font-family: 'Inter', sans-serif;
+    color: var(--ink); background: #fff; outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--gold); }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  /* ── DETAIL VIEW ── */
+  .detail-section { margin-bottom: 24px; }
+  .detail-section h4 { font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-faint); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .detail-field label { font-size: 11.5px; color: var(--ink-faint); display: block; margin-bottom: 3px; }
+  .detail-field span { font-size: 14px; font-weight: 500; }
+  .notes-box { background: var(--parchment); border-radius: 8px; padding: 12px 14px; font-size: 13.5px; line-height: 1.6; border: 1px solid var(--border); }
+
+  /* ── HEARING LOG ── */
+  .hearing-log { display: flex; flex-direction: column; gap: 8px; }
+  .hearing-entry {
+    background: var(--parchment); border-radius: 8px;
+    padding: 10px 14px; border-left: 3px solid var(--gold);
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .hearing-entry .h-date { font-size: 12px; font-weight: 600; min-width: 80px; color: var(--ink-soft); }
+  .hearing-entry .h-note { font-size: 13px; color: var(--ink); }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--ink-faint);
+  }
+  .empty-state .empty-icon { font-size: 48px; margin-bottom: 14px; }
+  .empty-state h3 { font-family: 'EB Garamond', serif; font-size: 20px; color: var(--ink-soft); margin-bottom: 6px; }
+  .empty-state p { font-size: 13.5px; }
+
+  /* ── PAGES ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── DASHBOARD GRID ── */
+  .dash-grid { display: grid; grid-template-columns: 1fr 340px; gap: 24px; }
+  .dash-main {}
+  .dash-side {}
+
+  .card { background: var(--cream); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .card-head { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-head h3 { font-family: 'EB Garamond', serif; font-size: 17px; font-weight: 600; }
+  .card-body { padding: 16px 20px; }
+
+  .reminder-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--red-pale); color: var(--red);
+    padding: 3px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600;
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--ink); color: #fff;
+    padding: 12px 20px; border-radius: 10px; font-size: 13.5px;
+    box-shadow: 0 8px 24px var(--shadow);
+    transform: translateY(80px); opacity: 0;
+    transition: all 0.3s; z-index: 200;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-left: 4px solid var(--green); }
+  .toast.error   { border-left: 4px solid var(--red); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .sidebar { width: 220px; min-width: 220px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .dash-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── AI STYLES ── */
+  .ai-tool-card { transition: all 0.15s; }
+  .ai-tool-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px var(--shadow); }
+  .ai-tool-card.selected { border: 2px solid var(--gold) !important; background: var(--gold-pale); }
+  .ai-output-section { background: var(--parchment); border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; border-left: 3px solid var(--gold); }
+  .ai-output-section h4 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--gold); margin-bottom: 8px; }
+  .ai-output-section p, .ai-output-section li { font-size: 13.5px; line-height: 1.7; color: var(--ink); }
+  .ai-output-section ul { padding-left: 18px; }
+  .ai-output-section li { margin-bottom: 4px; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .pulsing { animation: pulse 1.5s infinite; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h1>Lex<span>Track</span></h1>
+      <p>Case Management System</p>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-label">Navigation</div>
+      <button class="nav-item active" onclick="showPage('dashboard')">
+        <span class="icon">⚖️</span> Dashboard
+      </button>
+      <button class="nav-item" onclick="showPage('cases')">
+        <span class="icon">📁</span> All Cases
+      </button>
+      <button class="nav-item" onclick="showPage('hearings')">
+        <span class="icon">📅</span> Hearings
+      </button>
+      <button class="nav-item" onclick="showPage('clients')">
+        <span class="icon">👤</span> Clients
+      </button>
+      <div class="nav-label" style="margin-top:12px">Tools</div>
+      <button class="nav-item" onclick="showPage('notes')">
+        <span class="icon">📝</span> Case Notes
+      </button>
+      <button class="nav-item" onclick="showPage('ai')">
+        <span class="icon">🤖</span> AI Assistant
+      </button>
+      <button class="nav-item" onclick="exportData()">
+        <span class="icon">💾</span> Export Data
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <div style="font-weight:600;color:rgba(255,255,255,0.5);margin-bottom:2px">LexTrack v1.0</div>
+      Data stored locally in browser
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-title" id="page-title">Dashboard</div>
+      <div class="topbar-right">
+        <span id="today-display" style="font-size:13px;color:var(--ink-faint)"></span>
+        <button class="btn btn-primary" onclick="openAddCase()">+ New Case</button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- DASHBOARD PAGE -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid" id="stats-grid"></div>
+        <div class="dash-grid">
+          <div class="dash-main">
+            <div class="card">
+              <div class="card-head">
+                <h3>Recent Cases</h3>
+                <button class="btn btn-outline btn-sm" onclick="showPage('cases')">View All</button>
+              </div>
+              <div class="card-body" id="dash-recent"></div>
+            </div>
+          </div>
+          <div class="dash-side">
+            <div class="card">
+              <div class="card-head">
+                <h3>Upcoming Hearings</h3>
+                <span class="reminder-badge" id="urgent-count">0 urgent</span>
+              </div>
+              <div class="card-body" id="dash-upcoming"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ALL CASES PAGE -->
+      <div class="page" id="page-cases">
+        <div class="search-bar">
+          <input type="text" id="search-input" placeholder="Search by case number, client name, court…" oninput="renderCasesTable()"/>
+        </div>
+        <div class="filters" id="case-filters">
+          <button class="filter-btn active" onclick="setFilter('All',this)">All</button>
+          <button class="filter-btn" onclick="setFilter('Active',this)">Active</button>
+          <button class="filter-btn" onclick="setFilter('Pending',this)">Pending</button>
+          <button class="filter-btn" onclick="setFilter('Closed',this)">Closed</button>
+          <button class="filter-btn" onclick="setFilter('Urgent',this)">🔴 Urgent</button>
+        </div>
+        <div class="case-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Case No.</th>
+                <th>Case Title / Client</th>
+                <th>Court</th>
+                <th>Next Hearing</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="cases-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- HEARINGS PAGE -->
+      <div class="page" id="page-hearings">
+        <div class="section-head">
+          <h2>All Hearing Dates</h2>
+        </div>
+        <div id="hearings-list"></div>
+      </div>
+
+      <!-- CLIENTS PAGE -->
+      <div class="page" id="page-clients">
+        <div class="section-head"><h2>Client Directory</h2></div>
+        <div class="case-table-wrap">
+          <table>
+            <thead>
+              <tr><th>Client Name</th><th>Contact</th><th>Cases</th><th>Active</th></tr>
+            </thead>
+            <tbody id="clients-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- NOTES PAGE -->
+      <div class="page" id="page-notes">
+        <div class="section-head"><h2>Case Notes</h2></div>
+        <div id="notes-list"></div>
+      </div>
+
+      <!-- AI ASSISTANT PAGE -->
+      <div class="page" id="page-ai">
+        <div style="max-width:800px">
+
+          <!-- AI Tools Grid -->
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px">
+            <div class="card ai-tool-card" onclick="setAITool('summarize')" id="tool-summarize" style="cursor:pointer;border:2px solid var(--gold)">
+              <div class="card-body" style="text-align:center;padding:20px 16px">
+                <div style="font-size:32px;margin-bottom:8px">📜</div>
+                <div style="font-weight:600;font-size:14px;margin-bottom:4px">Judgment Summarizer</div>
+                <div style="font-size:12px;color:var(--ink-faint)">Paste any judgment and get a structured summary</div>
+              </div>
+            </div>
+            <div class="card ai-tool-card" onclick="setAITool('prep')" id="tool-prep" style="cursor:pointer">
+              <div class="card-body" style="text-align:center;padding:20px 16px">
+                <div style="font-size:32px;margin-bottom:8px">⚔️</div>
+                <div style="font-weight:600;font-size:14px;margin-bottom:4px">Hearing Prep</div>
+                <div style="font-size:12px;color:var(--ink-faint)">Get arguments & strategy for your next hearing</div>
+              </div>
+            </div>
+            <div class="card ai-tool-card" onclick="setAITool('draft')" id="tool-draft" style="cursor:pointer">
+              <div class="card-body" style="text-align:center;padding:20px 16px">
+                <div style="font-size:32px;margin-bottom:8px">✍️</div>
+                <div style="font-weight:600;font-size:14px;margin-bottom:4px">Draft Generator</div>
+                <div style="font-size:12px;color:var(--ink-faint)">Generate petition drafts and legal letters</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AI Input Area -->
+          <div class="card" id="ai-input-card">
+            <div class="card-head">
+              <h3 id="ai-tool-title">📜 Judgment Summarizer</h3>
+              <span style="font-size:12px;color:var(--ink-faint)" id="ai-tool-hint">Paste judgment text below</span>
+            </div>
+            <div class="card-body">
+
+              <!-- Summarizer inputs -->
+              <div id="ai-inputs-summarize">
+                <div class="form-group">
+                  <label>Paste Judgment / Order Text</label>
+                  <textarea id="ai-judgment-text" style="min-height:160px" placeholder="Paste the full or partial text of the judgment, court order, or legal document here…"></textarea>
+                </div>
+              </div>
+
+              <!-- Hearing Prep inputs -->
+              <div id="ai-inputs-prep" style="display:none">
+                <div class="form-group">
+                  <label>Select Case (optional)</label>
+                  <select id="ai-case-select">
+                    <option value="">— Type case details manually —</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Case Type</label>
+                    <input type="text" id="ai-prep-type" placeholder="e.g. SLP, Writ Petition, Appeal"/>
+                  </div>
+                  <div class="form-group">
+                    <label>Court</label>
+                    <input type="text" id="ai-prep-court" placeholder="e.g. Supreme Court of India"/>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Brief Facts of the Case</label>
+                  <textarea id="ai-prep-facts" style="min-height:100px" placeholder="Briefly describe the facts — who is the petitioner, what happened, what relief is sought…"></textarea>
+                </div>
+                <div class="form-group">
+                  <label>Key Legal Issues / Questions</label>
+                  <textarea id="ai-prep-issues" placeholder="What are the main legal questions the court will examine?"></textarea>
+                </div>
+              </div>
+
+              <!-- Draft Generator inputs -->
+              <div id="ai-inputs-draft" style="display:none">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Document Type</label>
+                    <select id="ai-draft-type">
+                      <option>Writ Petition</option>
+                      <option>Legal Notice</option>
+                      <option>Reply to Legal Notice</option>
+                      <option>Vakalatnama Cover Letter</option>
+                      <option>Application for Adjournment</option>
+                      <option>Written Submission</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Court</label>
+                    <input type="text" id="ai-draft-court" placeholder="Supreme Court of India"/>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Petitioner / Client Name</label>
+                  <input type="text" id="ai-draft-client" placeholder="Name of petitioner or client"/>
+                </div>
+                <div class="form-group">
+                  <label>Respondent / Opposite Party</label>
+                  <input type="text" id="ai-draft-respondent" placeholder="Name of respondent or opposite party"/>
+                </div>
+                <div class="form-group">
+                  <label>Facts & Relief Sought</label>
+                  <textarea id="ai-draft-facts" style="min-height:100px" placeholder="Describe the key facts and what relief you want the court to grant…"></textarea>
+                </div>
+              </div>
+
+              <button class="btn btn-primary" onclick="runAI()" id="ai-run-btn" style="width:100%;padding:12px;font-size:14px;margin-top:8px">
+                🤖 Generate with AI
+              </button>
+            </div>
+          </div>
+
+          <!-- AI Output -->
+          <div class="card" id="ai-output-card" style="margin-top:20px;display:none">
+            <div class="card-head">
+              <h3>AI Response</h3>
+              <button class="btn btn-outline btn-sm" onclick="copyAIOutput()">Copy</button>
+            </div>
+            <div class="card-body">
+              <div id="ai-output-content" style="font-size:14px;line-height:1.8;white-space:pre-wrap;color:var(--ink)"></div>
+            </div>
+          </div>
+
+          <!-- Loading -->
+          <div id="ai-loading" style="display:none;text-align:center;padding:40px">
+            <div style="font-size:36px;margin-bottom:12px">⚖️</div>
+            <div style="font-weight:600;color:var(--ink-soft)" id="ai-loading-msg">Consulting AI…</div>
+            <div style="font-size:13px;color:var(--ink-faint);margin-top:6px">This may take a few seconds</div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ADD/EDIT CASE MODAL -->
+<div class="modal-overlay hidden" id="case-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Add New Case</h3>
+      <button class="modal-close" onclick="closeModal('case-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="case-id"/>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Case Number *</label>
+          <input type="text" id="f-case-no" placeholder="e.g. SLP(C) 1234/2024"/>
+        </div>
+        <div class="form-group">
+          <label>Case Type</label>
+          <select id="f-case-type">
+            <option>Civil Appeal</option>
+            <option>Criminal Appeal</option>
+            <option>SLP</option>
+            <option>PIL</option>
+            <option>Writ Petition</option>
+            <option>Review Petition</option>
+            <option>Arbitration</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Case Title *</label>
+        <input type="text" id="f-title" placeholder="e.g. Ram Prasad vs State of UP"/>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Client Name *</label>
+          <input type="text" id="f-client" placeholder="Client / Petitioner name"/>
+        </div>
+        <div class="form-group">
+          <label>Client Contact</label>
+          <input type="text" id="f-contact" placeholder="+91 XXXXXXXXXX"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Court / Bench</label>
+          <select id="f-court">
+            <option>Supreme Court of India</option>
+            <option>Allahabad High Court</option>
+            <option>Delhi High Court</option>
+            <option>Bombay High Court</option>
+            <option>Calcutta High Court</option>
+            <option>District Court</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="f-status">
+            <option>Active</option>
+            <option>Pending</option>
+            <option>Urgent</option>
+            <option>Closed</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Next Hearing Date</label>
+          <input type="date" id="f-hearing"/>
+        </div>
+        <div class="form-group">
+          <label>Filing Date</label>
+          <input type="date" id="f-filed"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Opposing Counsel</label>
+        <input type="text" id="f-opposing" placeholder="Name of opposing advocate"/>
+      </div>
+      <div class="form-group">
+        <label>Case Notes</label>
+        <textarea id="f-notes" placeholder="Key facts, arguments, observations…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('case-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCase()">Save Case</button>
+    </div>
+  </div>
+</div>
+
+<!-- CASE DETAIL MODAL -->
+<div class="modal-overlay hidden" id="detail-modal">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <h3 id="detail-title">Case Details</h3>
+      <button class="modal-close" onclick="closeModal('detail-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="detail-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="detail-delete-btn">Delete Case</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-outline" onclick="closeModal('detail-modal')">Close</button>
+      <button class="btn btn-primary" id="detail-edit-btn">Edit Case</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD HEARING NOTE MODAL -->
+<div class="modal-overlay hidden" id="hearing-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h3>Add Hearing Note</h3>
+      <button class="modal-close" onclick="closeModal('hearing-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="h-case-id"/>
+      <div class="form-group">
+        <label>Hearing Date</label>
+        <input type="date" id="h-date"/>
+      </div>
+      <div class="form-group">
+        <label>What Happened</label>
+        <textarea id="h-note" placeholder="Order passed, next steps, adjournment reason…"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Next Hearing Date</label>
+        <input type="date" id="h-next"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('hearing-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveHearingNote()">Save Note</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DATA LAYER ──
+let cases = JSON.parse(localStorage.getItem('lt_cases') || '[]');
+let currentFilter = 'All';
+let currentPage = 'dashboard';
+
+function save() { localStorage.setItem('lt_cases', JSON.stringify(cases)); }
+
+function genId() { return 'c' + Date.now() + Math.random().toString(36).slice(2,6); }
+
+function fmtDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+}
+
+function daysUntil(d) {
+  if (!d) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const target = new Date(d + 'T00:00:00');
+  return Math.round((target - today) / 86400000);
+}
+
+// ── PAGE ROUTING ──
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.textContent.toLowerCase().includes(name === 'dashboard' ? 'dash' : name)) n.classList.add('active');
+  });
+  const titles = { dashboard:'Dashboard', cases:'All Cases', hearings:'Hearings Calendar', clients:'Client Directory', notes:'Case Notes' };
+  document.getElementById('page-title').textContent = titles[name] || 'LexTrack';
+  currentPage = name;
+  renderPage(name);
+}
+
+function renderPage(name) {
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'cases')     renderCasesTable();
+  if (name === 'hearings')  renderHearings();
+  if (name === 'clients')   renderClients();
+  if (name === 'notes')     renderNotes();
+}
+
+// ── DASHBOARD ──
+function renderDashboard() {
+  const total   = cases.length;
+  const active  = cases.filter(c => c.status === 'Active').length;
+  const urgent  = cases.filter(c => c.status === 'Urgent').length;
+  const closed  = cases.filter(c => c.status === 'Closed').length;
+
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-icon gold">📁</div><div><div class="stat-val">${total}</div><div class="stat-label">Total Cases</div></div></div>
+    <div class="stat-card"><div class="stat-icon blue">⚡</div><div><div class="stat-val">${active}</div><div class="stat-label">Active Cases</div></div></div>
+    <div class="stat-card"><div class="stat-icon red">🔴</div><div><div class="stat-val">${urgent}</div><div class="stat-label">Urgent Matters</div></div></div>
+    <div class="stat-card"><div class="stat-icon green">✅</div><div><div class="stat-val">${closed}</div><div class="stat-label">Closed Cases</div></div></div>
+  `;
+
+  // Recent cases
+  const recent = [...cases].sort((a,b) => (b.created||0)-(a.created||0)).slice(0,5);
+  const recentEl = document.getElementById('dash-recent');
+  if (recent.length === 0) {
+    recentEl.innerHTML = `<div class="empty-state"><div class="empty-icon">⚖️</div><h3>No cases yet</h3><p>Add your first case to get started.</p></div>`;
+  } else {
+    recentEl.innerHTML = `<table style="width:100%;border-collapse:collapse">
+      <thead><tr style="border-bottom:1px solid var(--border)">
+        <th style="padding:8px 10px;text-align:left;font-size:11px;color:var(--ink-faint);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Case</th>
+        <th style="padding:8px 10px;text-align:left;font-size:11px;color:var(--ink-faint);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Client</th>
+        <th style="padding:8px 10px;text-align:left;font-size:11px;color:var(--ink-faint);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Status</th>
+      </tr></thead>
+      <tbody>${recent.map(c => `
+        <tr style="border-bottom:1px solid var(--border);cursor:pointer" onclick="openDetail('${c.id}')">
+          <td style="padding:10px 10px"><div class="case-no">${c.caseNo}</div><div class="case-client">${c.title}</div></td>
+          <td style="padding:10px 10px;font-size:13px">${c.client}</td>
+          <td style="padding:10px 10px"><span class="badge badge-${c.status.toLowerCase()}">${c.status}</span></td>
+        </tr>`).join('')}
+      </tbody></table>`;
+  }
+
+  // Upcoming hearings
+  const upcoming = cases
+    .filter(c => c.hearing && c.status !== 'Closed')
+    .sort((a,b) => a.hearing.localeCompare(b.hearing))
+    .slice(0, 6);
+
+  const urgentCount = upcoming.filter(c => (daysUntil(c.hearing)||99) <= 3).length;
+  document.getElementById('urgent-count').textContent = urgentCount + ' urgent';
+
+  const upEl = document.getElementById('dash-upcoming');
+  if (upcoming.length === 0) {
+    upEl.innerHTML = `<div style="text-align:center;padding:30px;color:var(--ink-faint);font-size:13px">No upcoming hearings scheduled.</div>`;
+  } else {
+    upEl.innerHTML = `<div class="upcoming-list">${upcoming.map(c => {
+      const d = daysUntil(c.hearing);
+      const dt = new Date(c.hearing + 'T00:00:00');
+      const isUrgent = d !== null && d <= 3;
+      const dayLabel = d === 0 ? 'TODAY' : d === 1 ? 'TOMORROW' : d !== null && d < 0 ? 'PAST' : `in ${d}d`;
+      return `<div class="upcoming-item ${isUrgent ? 'urgent' : ''}" onclick="openDetail('${c.id}')" style="cursor:pointer">
+        <div class="upcoming-date">
+          <div class="day">${dt.getDate()}</div>
+          <div class="month">${dt.toLocaleString('en',{month:'short'})}</div>
+        </div>
+        <div class="upcoming-info">
+          <div class="title">${c.caseNo}</div>
+          <div class="sub">${c.client} · ${c.court}</div>
+        </div>
+        <div style="font-size:11.5px;font-weight:600;color:${isUrgent?'var(--red)':'var(--ink-faint)'}">${dayLabel}</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+}
+
+// ── CASES TABLE ──
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderCasesTable();
+}
+
+function renderCasesTable() {
+  const q = (document.getElementById('search-input')?.value || '').toLowerCase();
+  let filtered = cases.filter(c => {
+    const matchFilter = currentFilter === 'All' || c.status === currentFilter;
+    const matchSearch = !q || c.caseNo.toLowerCase().includes(q) || c.client.toLowerCase().includes(q) || c.title.toLowerCase().includes(q) || c.court.toLowerCase().includes(q);
+    return matchFilter && matchSearch;
+  });
+  filtered.sort((a,b) => (a.hearing||'z').localeCompare(b.hearing||'z'));
+
+  const tbody = document.getElementById('cases-tbody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">🔍</div><h3>No cases found</h3><p>Try a different filter or search term.</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(c => {
+    const d = daysUntil(c.hearing);
+    const soonClass = d !== null && d <= 3 && c.status !== 'Closed' ? 'hearing-soon' : 'hearing-date';
+    const soonLabel = d === 0 ? ' (Today)' : d === 1 ? ' (Tomorrow)' : d !== null && d <= 3 && d >= 0 ? ` (${d}d)` : '';
+    return `<tr>
+      <td><span class="case-no">${c.caseNo}</span></td>
+      <td><div class="case-name">${c.title}</div><div class="case-client">${c.client}</div></td>
+      <td style="font-size:13px;color:var(--ink-soft)">${c.court}</td>
+      <td><span class="${soonClass}">${fmtDate(c.hearing)}${soonLabel}</span></td>
+      <td><span class="badge badge-${c.status.toLowerCase()}">${c.status}</span></td>
+      <td><div class="action-btns">
+        <button class="btn btn-outline btn-sm" onclick="openDetail('${c.id}')">View</button>
+        <button class="btn btn-outline btn-sm" onclick="openEditCase('${c.id}')">Edit</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── HEARINGS ──
+function renderHearings() {
+  const withHearings = cases
+    .filter(c => c.hearing && c.status !== 'Closed')
+    .sort((a,b) => a.hearing.localeCompare(b.hearing));
+
+  const el = document.getElementById('hearings-list');
+  if (withHearings.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📅</div><h3>No hearings scheduled</h3><p>Add hearing dates when creating cases.</p></div>`;
+    return;
+  }
+
+  // Group by month
+  const groups = {};
+  withHearings.forEach(c => {
+    const dt = new Date(c.hearing + 'T00:00:00');
+    const key = dt.toLocaleString('en',{month:'long',year:'numeric'});
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(c);
+  });
+
+  el.innerHTML = Object.entries(groups).map(([month, cs]) => `
+    <div style="margin-bottom:24px">
+      <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-faint);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)">${month}</div>
+      <div class="upcoming-list">${cs.map(c => {
+        const d = daysUntil(c.hearing);
+        const dt = new Date(c.hearing + 'T00:00:00');
+        const isUrgent = d !== null && d <= 3;
+        return `<div class="upcoming-item ${isUrgent?'urgent':''}" onclick="openDetail('${c.id}')" style="cursor:pointer">
+          <div class="upcoming-date">
+            <div class="day">${dt.getDate()}</div>
+            <div class="month">${dt.toLocaleString('en',{month:'short'})}</div>
+          </div>
+          <div class="upcoming-info">
+            <div class="title">${c.caseNo} — ${c.title}</div>
+            <div class="sub">${c.client} · ${c.court}</div>
+          </div>
+          <span class="badge badge-${c.status.toLowerCase()}">${c.status}</span>
+        </div>`;
+      }).join('')}</div>
+    </div>`).join('');
+}
+
+// ── CLIENTS ──
+function renderClients() {
+  const map = {};
+  cases.forEach(c => {
+    if (!map[c.client]) map[c.client] = { contact: c.contact, cases: 0, active: 0 };
+    map[c.client].cases++;
+    if (c.status === 'Active' || c.status === 'Urgent') map[c.client].active++;
+  });
+  const tbody = document.getElementById('clients-tbody');
+  if (Object.keys(map).length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="empty-icon">👤</div><h3>No clients yet</h3><p>Clients are added automatically when you create cases.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = Object.entries(map).map(([name,info]) => `
+    <tr>
+      <td style="font-weight:500">${name}</td>
+      <td style="font-size:13px;color:var(--ink-soft)">${info.contact || '—'}</td>
+      <td style="font-weight:600">${info.cases}</td>
+      <td><span class="badge ${info.active>0?'badge-active':'badge-closed'}">${info.active}</span></td>
+    </tr>`).join('');
+}
+
+// ── NOTES ──
+function renderNotes() {
+  const withNotes = cases.filter(c => c.notes && c.notes.trim());
+  const el = document.getElementById('notes-list');
+  if (withNotes.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">📝</div><h3>No notes yet</h3><p>Add notes when creating or editing cases.</p></div>`;
+    return;
+  }
+  el.innerHTML = `<div style="display:flex;flex-direction:column;gap:14px">${withNotes.map(c => `
+    <div class="card" onclick="openDetail('${c.id}')" style="cursor:pointer">
+      <div class="card-head">
+        <div><span class="case-no">${c.caseNo}</span> <span style="color:var(--ink-soft);font-size:13px;margin-left:8px">${c.title}</span></div>
+        <span class="badge badge-${c.status.toLowerCase()}">${c.status}</span>
+      </div>
+      <div class="card-body"><div class="notes-box">${c.notes}</div></div>
+    </div>`).join('')}</div>`;
+}
+
+// ── ADD/EDIT CASE ──
+function openAddCase() {
+  document.getElementById('modal-title').textContent = 'Add New Case';
+  document.getElementById('case-id').value = '';
+  ['case-no','title','client','contact','opposing','notes'].forEach(f => document.getElementById('f-'+f).value = '');
+  document.getElementById('f-hearing').value = '';
+  document.getElementById('f-filed').value = '';
+  document.getElementById('f-case-type').value = 'Civil Appeal';
+  document.getElementById('f-court').value = 'Supreme Court of India';
+  document.getElementById('f-status').value = 'Active';
+  document.getElementById('case-modal').classList.remove('hidden');
+}
+
+function openEditCase(id) {
+  const c = cases.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('modal-title').textContent = 'Edit Case';
+  document.getElementById('case-id').value = c.id;
+  document.getElementById('f-case-no').value = c.caseNo;
+  document.getElementById('f-title').value = c.title;
+  document.getElementById('f-client').value = c.client;
+  document.getElementById('f-contact').value = c.contact || '';
+  document.getElementById('f-opposing').value = c.opposing || '';
+  document.getElementById('f-notes').value = c.notes || '';
+  document.getElementById('f-hearing').value = c.hearing || '';
+  document.getElementById('f-filed').value = c.filed || '';
+  document.getElementById('f-case-type').value = c.caseType || 'Civil Appeal';
+  document.getElementById('f-court').value = c.court || 'Supreme Court of India';
+  document.getElementById('f-status').value = c.status || 'Active';
+  document.getElementById('case-modal').classList.remove('hidden');
+  document.getElementById('detail-modal').classList.add('hidden');
+}
+
+function saveCase() {
+  const caseNo = document.getElementById('f-case-no').value.trim();
+  const title  = document.getElementById('f-title').value.trim();
+  const client = document.getElementById('f-client').value.trim();
+  if (!caseNo || !title || !client) { showToast('Please fill in Case No., Title and Client name.', 'error'); return; }
+
+  const id = document.getElementById('case-id').value;
+  const data = {
+    caseNo, title, client,
+    contact:   document.getElementById('f-contact').value.trim(),
+    opposing:  document.getElementById('f-opposing').value.trim(),
+    notes:     document.getElementById('f-notes').value.trim(),
+    hearing:   document.getElementById('f-hearing').value,
+    filed:     document.getElementById('f-filed').value,
+    caseType:  document.getElementById('f-case-type').value,
+    court:     document.getElementById('f-court').value,
+    status:    document.getElementById('f-status').value,
+  };
+
+  if (id) {
+    const idx = cases.findIndex(c => c.id === id);
+    cases[idx] = { ...cases[idx], ...data };
+    showToast('Case updated successfully!', 'success');
+  } else {
+    cases.push({ id: genId(), created: Date.now(), hearingLog: [], ...data });
+    showToast('Case added successfully!', 'success');
+  }
+  save();
+  closeModal('case-modal');
+  renderPage(currentPage);
+}
+
+// ── DETAIL VIEW ──
+function openDetail(id) {
+  const c = cases.find(x => x.id === id);
+  if (!c) return;
+
+  document.getElementById('detail-title').textContent = c.caseNo;
+  document.getElementById('detail-edit-btn').onclick = () => openEditCase(id);
+  document.getElementById('detail-delete-btn').onclick = () => deleteCase(id);
+
+  const d = daysUntil(c.hearing);
+  const urgentNote = d !== null && d <= 3 && d >= 0 && c.status !== 'Closed'
+    ? `<span style="color:var(--red);font-weight:600;font-size:12px">⚠️ ${d === 0 ? 'Today!' : d === 1 ? 'Tomorrow!' : `In ${d} days!`}</span>` : '';
+
+  document.getElementById('detail-body').innerHTML = `
+    <div class="detail-section">
+      <h4>Case Information</h4>
+      <div class="detail-grid">
+        <div class="detail-field"><label>Case Number</label><span class="case-no">${c.caseNo}</span></div>
+        <div class="detail-field"><label>Case Type</label><span>${c.caseType || '—'}</span></div>
+        <div class="detail-field"><label>Title</label><span>${c.title}</span></div>
+        <div class="detail-field"><label>Status</label><span class="badge badge-${c.status.toLowerCase()}">${c.status}</span></div>
+        <div class="detail-field"><label>Court / Bench</label><span>${c.court}</span></div>
+        <div class="detail-field"><label>Filed On</label><span>${fmtDate(c.filed)}</span></div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <h4>Client & Counsel</h4>
+      <div class="detail-grid">
+        <div class="detail-field"><label>Client</label><span>${c.client}</span></div>
+        <div class="detail-field"><label>Contact</label><span>${c.contact || '—'}</span></div>
+        <div class="detail-field"><label>Opposing Counsel</label><span>${c.opposing || '—'}</span></div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <h4>Hearing</h4>
+      <div class="detail-grid">
+        <div class="detail-field"><label>Next Hearing</label><span>${fmtDate(c.hearing)} ${urgentNote}</span></div>
+      </div>
+    </div>
+    ${c.notes ? `<div class="detail-section"><h4>Notes</h4><div class="notes-box">${c.notes}</div></div>` : ''}
+    <div class="detail-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <h4 style="margin:0;border:0;padding:0;font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-faint)">Hearing Log</h4>
+        <button class="btn btn-outline btn-sm" onclick="openHearingNote('${id}')">+ Add Note</button>
+      </div>
+      <div class="hearing-log">${(c.hearingLog||[]).length === 0
+        ? `<div style="font-size:13px;color:var(--ink-faint);padding:10px 0">No hearing notes yet.</div>`
+        : (c.hearingLog||[]).slice().reverse().map(h => `
+          <div class="hearing-entry">
+            <div class="h-date">${fmtDate(h.date)}</div>
+            <div class="h-note">${h.note}${h.next ? `<br><span style="font-size:11.5px;color:var(--gold);margin-top:4px;display:block">→ Next: ${fmtDate(h.next)}</span>` : ''}</div>
+          </div>`).join('')
+      }</div>
+    </div>`;
+
+  document.getElementById('detail-modal').classList.remove('hidden');
+}
+
+// ── HEARING NOTE ──
+function openHearingNote(caseId) {
+  document.getElementById('h-case-id').value = caseId;
+  document.getElementById('h-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('h-note').value = '';
+  document.getElementById('h-next').value = '';
+  document.getElementById('hearing-modal').classList.remove('hidden');
+}
+
+function saveHearingNote() {
+  const caseId = document.getElementById('h-case-id').value;
+  const date   = document.getElementById('h-date').value;
+  const note   = document.getElementById('h-note').value.trim();
+  const next   = document.getElementById('h-next').value;
+  if (!note) { showToast('Please enter a note.', 'error'); return; }
+
+  const c = cases.find(x => x.id === caseId);
+  if (!c) return;
+  if (!c.hearingLog) c.hearingLog = [];
+  c.hearingLog.push({ date, note, next });
+  if (next) c.hearing = next;
+  save();
+  closeModal('hearing-modal');
+  openDetail(caseId);
+  showToast('Hearing note saved!', 'success');
+}
+
+// ── DELETE ──
+function deleteCase(id) {
+  if (!confirm('Delete this case? This cannot be undone.')) return;
+  cases = cases.filter(c => c.id !== id);
+  save();
+  closeModal('detail-modal');
+  renderPage(currentPage);
+  showToast('Case deleted.', 'success');
+}
+
+// ── EXPORT ──
+function exportData() {
+  const blob = new Blob([JSON.stringify(cases, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'lextrack-cases-' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+  showToast('Data exported successfully!', 'success');
+}
+
+// ── MODAL ──
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+// ── TOAST ──
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── INIT ──
+document.getElementById('today-display').textContent = new Date().toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+// Seed with sample data if empty
+if (cases.length === 0) {
+  const today = new Date();
+  const d = (offset) => { const dt = new Date(today); dt.setDate(dt.getDate()+offset); return dt.toISOString().split('T')[0]; };
+  cases = [
+    { id:genId(), created:Date.now()-5*86400000, caseNo:'SLP(C) 4521/2024', caseType:'SLP', title:'Ram Prasad vs State of UP', client:'Ram Prasad Sharma', contact:'+91 98765 43210', court:'Supreme Court of India', status:'Urgent', hearing:d(2), filed:d(-120), opposing:'Adv. Singh', notes:'Urgent matter — challenge to land acquisition order. Client needs immediate relief.', hearingLog:[{date:d(-30),note:'Matter listed before 3-judge bench. Arguments partly heard.',next:d(2)}] },
+    { id:genId(), created:Date.now()-10*86400000, caseNo:'W.P.(C) 1234/2023', caseType:'Writ Petition', title:'Meena Devi vs Union of India', client:'Meena Devi', contact:'+91 87654 32109', court:'Allahabad High Court', status:'Active', hearing:d(14), filed:d(-200), opposing:'ASG Verma', notes:'Service matter — wrongful termination from government job.', hearingLog:[] },
+    { id:genId(), created:Date.now()-20*86400000, caseNo:'CA 7891/2022', caseType:'Civil Appeal', title:'Agarwal & Sons vs Sharma Traders', client:'Agarwal & Sons Pvt. Ltd.', contact:'+91 76543 21098', court:'Supreme Court of India', status:'Pending', hearing:d(45), filed:d(-400), opposing:'Sr. Adv. Mehta', notes:'Commercial dispute — breach of contract. Arbitration award challenged.', hearingLog:[] },
+    { id:genId(), created:Date.now()-60*86400000, caseNo:'CRL.A. 456/2021', caseType:'Criminal Appeal', title:'State vs Rajesh Kumar', client:'Rajesh Kumar', contact:'+91 65432 10987', court:'Supreme Court of India', status:'Closed', hearing:'', filed:d(-600), opposing:'PP Tiwari', notes:'Acquittal upheld. Case successfully closed.', hearingLog:[{date:d(-10),note:'Judgment pronounced. Appeal dismissed. Client acquitted.',next:''}] },
+  ];
+  save();
+}
+
+renderDashboard();
+
+// ── AI ASSISTANT ──
+let currentAITool = 'summarize';
+
+function setAITool(tool) {
+  currentAITool = tool;
+  document.querySelectorAll('.ai-tool-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('tool-' + tool).classList.add('selected');
+  document.getElementById('ai-inputs-summarize').style.display = tool === 'summarize' ? '' : 'none';
+  document.getElementById('ai-inputs-prep').style.display      = tool === 'prep'      ? '' : 'none';
+  document.getElementById('ai-inputs-draft').style.display     = tool === 'draft'     ? '' : 'none';
+  const titles = { summarize:'📜 Judgment Summarizer', prep:'⚔️ Hearing Prep Assistant', draft:'✍️ Draft Generator' };
+  const hints  = { summarize:'Paste judgment text below', prep:'Fill in case details for tailored strategy', draft:'Describe the document you need' };
+  document.getElementById('ai-tool-title').textContent = titles[tool];
+  document.getElementById('ai-tool-hint').textContent  = hints[tool];
+  if (tool === 'prep') {
+    const sel = document.getElementById('ai-case-select');
+    sel.innerHTML = '<option value="">— Type case details manually —</option>';
+    cases.filter(c => c.status !== 'Closed').forEach(c => {
+      sel.innerHTML += `<option value="${c.id}">${c.caseNo} — ${c.client}</option>`;
+    });
+    sel.onchange = () => {
+      const c = cases.find(x => x.id === sel.value);
+      if (!c) return;
+      document.getElementById('ai-prep-type').value  = c.caseType || '';
+      document.getElementById('ai-prep-court').value = c.court || '';
+      document.getElementById('ai-prep-facts').value = c.notes || '';
+    };
+  }
+  document.getElementById('ai-output-card').style.display = 'none';
+}
+
+async function runAI() {
+  let prompt = '';
+  const loadingMsgs = { summarize:'Reading judgment…', prep:'Preparing hearing strategy…', draft:'Drafting legal document…' };
+
+  if (currentAITool === 'summarize') {
+    const text = document.getElementById('ai-judgment-text').value.trim();
+    if (!text) { showToast('Please paste judgment text first.', 'error'); return; }
+    prompt = `You are an expert Indian lawyer. Analyze this legal judgment/order and provide a structured summary.\n\nJUDGMENT TEXT:\n${text.slice(0,4000)}\n\nRespond in this exact format:\n\nCASE DETAILS\nCourt: [court name]\nParties: [petitioner vs respondent]\nDate: [date if mentioned]\n\nFACTS IN BRIEF\n[2-3 sentences summarizing key facts]\n\nLEGAL ISSUES\n- [issue 1]\n- [issue 2]\n\nHELD / DECISION\n[What the court decided]\n\nKEY LEGAL PRINCIPLES\n- [principle 1]\n- [principle 2]\n\nSIGNIFICANCE\n[Why this judgment matters]`;
+  } else if (currentAITool === 'prep') {
+    const type  = document.getElementById('ai-prep-type').value.trim() || 'case';
+    const court = document.getElementById('ai-prep-court').value.trim() || 'court';
+    const facts = document.getElementById('ai-prep-facts').value.trim();
+    const issues= document.getElementById('ai-prep-issues').value.trim();
+    if (!facts) { showToast('Please describe the facts of the case.', 'error'); return; }
+    prompt = `You are a senior Indian advocate preparing for a hearing.\n\nCASE TYPE: ${type}\nCOURT: ${court}\nFACTS: ${facts}\nLEGAL ISSUES: ${issues||'Not specified'}\n\nProvide a hearing preparation guide:\n\nOPENING ARGUMENT\n[How to open arguments]\n\nKEY ARGUMENTS\n- [Argument 1]\n- [Argument 2]\n- [Argument 3]\n\nLIKELY QUESTIONS FROM BENCH\n- [Question 1]\n- [Question 2]\n\nIMPORTANT PRECEDENTS TO CITE\n- [Case and relevance]\n- [Case and relevance]\n\nWEAKNESSES TO WATCH FOR\n- [Weakness 1]\n- [Weakness 2]\n\nSTRATEGY NOTES\n[Overall approach and tone]`;
+  } else if (currentAITool === 'draft') {
+    const dtype  = document.getElementById('ai-draft-type').value;
+    const dcourt = document.getElementById('ai-draft-court').value.trim() || 'Supreme Court of India';
+    const dclient= document.getElementById('ai-draft-client').value.trim();
+    const dresp  = document.getElementById('ai-draft-respondent').value.trim();
+    const dfacts = document.getElementById('ai-draft-facts').value.trim();
+    if (!dclient || !dfacts) { showToast('Please fill in client name and facts.', 'error'); return; }
+    prompt = `You are an expert Indian advocate. Draft a professional ${dtype} for:\n\nCOURT: ${dcourt}\nPETITIONER: ${dclient}\nRESPONDENT: ${dresp||'Respondent'}\nFACTS & RELIEF: ${dfacts}\n\nDraft a formal ${dtype} with proper heading, parties, facts in numbered paragraphs, legal grounds, prayer clause, and signature block. Use formal Indian legal language.`;
+  }
+
+  document.getElementById('ai-loading').style.display = 'block';
+  document.getElementById('ai-loading-msg').textContent = loadingMsgs[currentAITool];
+  document.getElementById('ai-loading-msg').classList.add('pulsing');
+  document.getElementById('ai-output-card').style.display = 'none';
+  document.getElementById('ai-run-btn').disabled = true;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, messages:[{role:'user',content:prompt}] })
+    });
+    const data = await res.json();
+    const text = data.content?.map(b => b.text||'').join('') || 'No response received.';
+    renderAIOutput(text);
+  } catch(err) {
+    renderAIOutput('Error connecting to AI. Please try again.\n\n' + err.message);
+  } finally {
+    document.getElementById('ai-loading').style.display = 'none';
+    document.getElementById('ai-loading-msg').classList.remove('pulsing');
+    document.getElementById('ai-run-btn').disabled = false;
+  }
+}
+
+function renderAIOutput(text) {
+  const lines = text.split('\n');
+  let html = '', currentSection = null, buffer = [];
+  function flush() {
+    const content = buffer.join('\n').trim();
+    if (!content && !currentSection) return;
+    const items = content.split('\n').filter(l => l.trim());
+    const listItems = items.filter(l => l.trim().startsWith('-'));
+    const paraItems = items.filter(l => !l.trim().startsWith('-'));
+    let inner = '';
+    if (listItems.length) inner += '<ul>' + listItems.map(l=>`<li>${l.replace(/^-\s*/,'')}</li>`).join('') + '</ul>';
+    if (paraItems.length) inner += paraItems.map(l=>`<p>${l}</p>`).join('');
+    html += `<div class="ai-output-section">${currentSection?`<h4>${currentSection}</h4>`:''}${inner}</div>`;
+    buffer = [];
+  }
+  lines.forEach(line => {
+    const t = line.trim();
+    if (t && t === t.toUpperCase() && t.length > 3 && !t.startsWith('-') && !/^\d/.test(t)) { flush(); currentSection = t; }
+    else buffer.push(line);
+  });
+  flush();
+  if (!html) html = `<div class="ai-output-section"><p>${text.replace(/\n/g,'<br>')}</p></div>`;
+  document.getElementById('ai-output-content').innerHTML = html;
+  document.getElementById('ai-output-card').style.display = 'block';
+  document.getElementById('ai-output-card').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function copyAIOutput() {
+  navigator.clipboard.writeText(document.getElementById('ai-output-content').innerText)
+    .then(() => showToast('Copied to clipboard!', 'success'));
+}
+
+// Override showPage & renderPage to include AI
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pg = document.getElementById('page-' + name);
+  if (pg) pg.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => {
+    const txt = n.textContent.toLowerCase();
+    if (name==='dashboard'&&txt.includes('dash')) n.classList.add('active');
+    else if (name==='ai'&&txt.includes('ai')) n.classList.add('active');
+    else if (name!=='dashboard'&&name!=='ai'&&txt.includes(name)) n.classList.add('active');
+  });
+  const titles = {dashboard:'Dashboard',cases:'All Cases',hearings:'Hearings Calendar',clients:'Client Directory',notes:'Case Notes',ai:'AI Assistant'};
+  document.getElementById('page-title').textContent = titles[name]||'LexTrack';
+  currentPage = name;
+  renderPage(name);
+}
+
+function renderPage(name) {
+  if (name==='dashboard') renderDashboard();
+  if (name==='cases')     renderCasesTable();
+  if (name==='hearings')  renderHearings();
+  if (name==='clients')   renderClients();
+  if (name==='notes')     renderNotes();
+  if (name==='ai')        setAITool(currentAITool);
+}
+</script>
+</body>
+</html>
